@@ -26,5 +26,13 @@
     "eslint": "^4.5.0",
     "eslint-config-airbnb-base": "^11.3.2",
     "eslint-plugin-import": "^2.7.0"
+  },
+  "dependencies": {
+    "commander": "^2.11.0",
+    "filesize": "^3.5.10",
+    "moment": "^2.18.1",
+    "node-fetch": "^1.7.2",
+    "promise-queue": "^2.2.3",
+    "semver": "^5.4.1"
   }
 }
