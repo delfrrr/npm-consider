@@ -8,7 +8,7 @@ const fetch = require(`node-fetch`);
 const semver = require(`semver`);
 const Queue = require(`promise-queue`);
 const filesize = require(`filesize`);
-const moment = require('moment');
+const moment = require(`moment`);
 
 const registryUrl = `https://registry.npmjs.org/`;
 
@@ -43,8 +43,9 @@ function getPackageDetails(name, semVersion) {
   const key = `${name}@${semVersion}`;
   const url = `${registryUrl}${name}`;
   if (!packageDetailsCache[key]) {
-    process.stdout.clearLine();
-    process.stdout.write(`\r GET ${url}`);
+    process.stdout.cursorTo(0);
+    process.stdout.clearLine(1);
+    process.stdout.write(`GET ${url}`);
     packageDetailsCache[key] = fetch(url).then(checkResponse).then((packageInfo) => {
       let version;
       if (!semVersion) {
@@ -60,13 +61,17 @@ function getPackageDetails(name, semVersion) {
       if (!versionDetails) {
         versionDetails = packageInfo.versions[packageInfo[`dist-tags`].latest];
       }
+      let modified = packageInfo.time[version];
+      if (!modified) {
+        modified = packageInfo.time.modified;
+      }
       return fetch(versionDetails.dist.tarball, { method: `HEAD` }).then((r) => {
         const size = r.headers.get(`content-length`);
         return {
           name,
-          modified: packageInfo.time.modified,
+          modified,
           version,
-          license: versionDetails.license,
+          license: versionDetails.license || `Unknown`,
           dependencies: versionDetails.dependencies,
           semVersion,
           size
@@ -95,9 +100,9 @@ function addPackageToQueue(
   Object.keys(dependencies).forEach((pName) => {
     const semVersion = dependencies[pName];
     queue.add(() => getPackageDetails(pName, semVersion)
-      .then((packageData) => {
-        const { name, version, dependencies: pDependncies } = packageData;
-        packages[`${name}@${version}`] = packageData;
+      .then((packageStats) => {
+        const { name, version, dependencies: pDependncies } = packageStats;
+        packages[`${name}@${version}`] = packageStats;
         addPackageToQueue(
           queue,
           pDependncies,
@@ -121,26 +126,43 @@ function showQuickStats(name, semVersion, packages) {
   })[0];
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
-  console.log(`You are installing ${resolvedPackageName} (last modified ${
-    moment(packages[resolvedPackageName].modified).fromNow()
-  })`);
-  console.log(`Package size ${filesize(packages[resolvedPackageName].size)}`);
-  console.log(`Total number of packages to be installed ${packagesAr.length}`);
-  console.log(`Total size ${filesize(packagesAr.reduce((size, key) => {
+  console.log(`Total download packages ${packagesAr.length}`);
+  console.log(`Total download size ${filesize(packagesAr.reduce((size, key) => {
     size += Number(packages[key].size);
     return size;
   }, 0))}`);
+  const licenses = packagesAr.reduce((l, key) => {
+    let { license } = packages[key];
+    if (typeof license === `object`) {
+      license = license.type || `Unknown`;
+    }
+    l[license] = l[license] || 0;
+    l[license] += 1;
+    return l;
+  }, {});
+  console.log(`Licenses ${Object.keys(licenses).reduce((out, license) => {
+    out += ` ${license}:${licenses[license]}`;
+    return out;
+  }, ``)}`);
 }
 
 function install(nameVersion) {
   const queue = new Queue(20, Infinity);
   const packages = {};
-  const [name, semVersion] = nameVersion.split(`@`);
-  addPackageToQueue(
-    queue,
-    { [name]: semVersion || `latest` },
-    packages
-  ).then(() => {
+  let [name, semVersion] = nameVersion.split(`@`);
+  semVersion = semVersion || `latest`;
+  getPackageDetails(name, semVersion).then((packageStats) => {
+    process.stdout.cursorTo(0);
+    process.stdout.clearLine(1);
+    process.stdout.write(`You are installing ${packageStats.name}@${packageStats.version} (last modified ${
+      moment(packageStats.modified).fromNow()
+    })\n`);
+    return addPackageToQueue(
+      queue,
+      { [name]: semVersion },
+      packages
+    );
+  }).then(() => {
     showQuickStats(name, semVersion, packages);
   });
 }
