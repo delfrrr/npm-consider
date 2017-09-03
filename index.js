@@ -9,6 +9,8 @@ const semver = require(`semver`);
 const Queue = require(`promise-queue`);
 const filesize = require(`filesize`);
 const moment = require(`moment`);
+const inquirer = require(`inquirer`);
+const spawn = require(`child_process`).spawn;
 
 const registryUrl = `https://registry.npmjs.org/`;
 
@@ -150,7 +152,6 @@ function parseName(nameVersion) {
     scope = true;
     nameVersionStr = nameVersionStr.slice(1);
   }
-  console.log(nameVersionStr, scope);
   let [name, semVersion] = nameVersionStr.split(`@`);
   if (!semVersion) {
     semVersion = `latest`;
@@ -159,6 +160,12 @@ function parseName(nameVersion) {
     name = `@${name}`;
   }
   return { name, semVersion };
+}
+
+function exec(command, args) {
+  spawn(command, args, {
+    stdio: `inherit`
+  });
 }
 
 function install(nameVersion) {
@@ -182,6 +189,19 @@ function install(nameVersion) {
     );
   }).then(() => {
     showQuickStats(name, semVersion, packages);
+    return inquirer.prompt({
+      type: `list`,
+      name: `next`,
+      message: `Install this package?`,
+      choices: [`Install`, `Skip`]
+    });
+  }).then(({ next }) => {
+    switch (next) {
+      case `Install`:
+        return exec(`npm`, process.argv.slice(2));
+      default:
+        process.exit(0);
+    }
   });
 }
 

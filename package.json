@@ -30,6 +30,7 @@
   "dependencies": {
     "commander": "^2.11.0",
     "filesize": "^3.5.10",
+    "inquirer": "^3.2.3",
     "moment": "^2.18.1",
     "node-fetch": "^1.7.2",
     "promise-queue": "^2.2.3",
