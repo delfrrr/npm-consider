@@ -41,7 +41,7 @@ const packageDetailsCache = {};
 
 function getPackageDetails(name, semVersion) {
   const key = `${name}@${semVersion}`;
-  const url = `${registryUrl}${name}`;
+  const url = `${registryUrl}${name.replace(`/`, `%2f`)}`;
   if (!packageDetailsCache[key]) {
     process.stdout.cursorTo(0);
     process.stdout.clearLine(1);
@@ -121,9 +121,6 @@ function addPackageToQueue(
 
 function showQuickStats(name, semVersion, packages) {
   const packagesAr = Object.keys(packages);
-  const resolvedPackageName = packagesAr.filter((key) => {
-    return packages[key].name === name;
-  })[0];
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
   console.log(`Total download packages ${packagesAr.length}`);
@@ -146,15 +143,36 @@ function showQuickStats(name, semVersion, packages) {
   }, ``)}`);
 }
 
+function parseName(nameVersion) {
+  let nameVersionStr = String(nameVersion).trim();
+  let scope = false;
+  if (nameVersionStr[0] === `@`) {
+    scope = true;
+    nameVersionStr = nameVersionStr.slice(1);
+  }
+  console.log(nameVersionStr, scope);
+  let [name, semVersion] = nameVersionStr.split(`@`);
+  if (!semVersion) {
+    semVersion = `latest`;
+  }
+  if (scope) {
+    name = `@${name}`;
+  }
+  return { name, semVersion };
+}
+
 function install(nameVersion) {
   const queue = new Queue(20, Infinity);
   const packages = {};
-  let [name, semVersion] = nameVersion.split(`@`);
-  semVersion = semVersion || `latest`;
+  const { name, semVersion } = parseName(nameVersion);
   getPackageDetails(name, semVersion).then((packageStats) => {
     process.stdout.cursorTo(0);
     process.stdout.clearLine(1);
-    process.stdout.write(`You are installing ${packageStats.name}@${packageStats.version} (last modified ${
+    process.stdout.write(`You are installing ${
+      packageStats.name
+    }@${
+      packageStats.version
+    } (last modified ${
       moment(packageStats.modified).fromNow()
     })\n`);
     return addPackageToQueue(
