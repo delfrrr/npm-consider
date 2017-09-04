@@ -5,7 +5,7 @@ module.exports = {
         "prefer-const": ["error", {
             "destructuring": "all"
         }],
-        "quotes": ["error", "backtick"],
+        "quotes": ["error", "single", { "allowTemplateLiterals": true }],
         "no-param-reassign": 0,
         "comma-dangle": 0,
         "arrow-body-style": 0,

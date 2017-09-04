@@ -2,126 +2,17 @@
 * @file main file
 */
 
-const program = require(`commander`);
-const packageJson = require(`./package.json`);
-const fetch = require(`node-fetch`);
-const semver = require(`semver`);
-const Queue = require(`promise-queue`);
-const filesize = require(`filesize`);
-const moment = require(`moment`);
-const inquirer = require(`inquirer`);
-const spawn = require(`child_process`).spawn;
+const program = require('commander');
+const packageJson = require('./package.json');
+const filesize = require('filesize');
+const moment = require('moment');
+const inquirer = require('inquirer');
+const spawn = require('child_process').spawn;
+const getPackageDetails = require('./lib/getPackageDetails');
+const walkDependencies = require('./lib/walkDependencies');
+// const getLocalPackage = require('./lib/getLocalPackage');
 
-const registryUrl = `https://registry.npmjs.org/`;
-
-function checkResponse(r) {
-  if (r.ok) {
-    return r.json();
-  }
-  throw new Error(`Response is not ok`);
-}
-
-function getVersion(semVersion, versions) {
-  let version;
-  for (let i = 0; i < versions.length; i += 1) {
-    let matchingVersion;
-    if (semver.satisfies(versions[i], semVersion)) {
-      matchingVersion = versions[i];
-    }
-    if (matchingVersion) {
-      if (!version) {
-        version = matchingVersion;
-      } else if (semver.gt(version, matchingVersion)) {
-        version = matchingVersion;
-      }
-    }
-  }
-  return version;
-}
-
-const packageDetailsCache = {};
-
-function getPackageDetails(name, semVersion) {
-  const key = `${name}@${semVersion}`;
-  const url = `${registryUrl}${name.replace(`/`, `%2f`)}`;
-  if (!packageDetailsCache[key]) {
-    process.stdout.cursorTo(0);
-    process.stdout.clearLine(1);
-    process.stdout.write(`GET ${url}`);
-    packageDetailsCache[key] = fetch(url).then(checkResponse).then((packageInfo) => {
-      let version;
-      if (!semVersion) {
-        version = packageInfo[`dist-tags`].latest;
-      } else if (packageInfo[`dist-tags`][semVersion]) {
-        version = packageInfo[`dist-tags`][semVersion];
-      } else if (packageInfo.versions[semVersion]) {
-        version = semVersion;
-      } else {
-        version = getVersion(semVersion, Object.keys(packageInfo.versions));
-      }
-      let versionDetails = packageInfo.versions[version];
-      if (!versionDetails) {
-        versionDetails = packageInfo.versions[packageInfo[`dist-tags`].latest];
-      }
-      let modified = packageInfo.time[version];
-      if (!modified) {
-        modified = packageInfo.time.modified;
-      }
-      return fetch(versionDetails.dist.tarball, { method: `HEAD` }).then((r) => {
-        const size = r.headers.get(`content-length`);
-        return {
-          name,
-          modified,
-          version,
-          license: versionDetails.license || `Unknown`,
-          dependencies: versionDetails.dependencies,
-          semVersion,
-          size
-        };
-      });
-    });
-  }
-  return packageDetailsCache[key];
-}
-
-function createPromise() {
-  let resolve;
-  const p = new Promise((r) => {
-    resolve = r;
-  });
-  p.resolve = resolve;
-  return p;
-}
-
-function addPackageToQueue(
-  queue,
-  dependencies = {},
-  packages,
-  p = createPromise()
-) {
-  Object.keys(dependencies).forEach((pName) => {
-    const semVersion = dependencies[pName];
-    queue.add(() => getPackageDetails(pName, semVersion)
-      .then((packageStats) => {
-        const { name, version, dependencies: pDependncies } = packageStats;
-        packages[`${name}@${version}`] = packageStats;
-        addPackageToQueue(
-          queue,
-          pDependncies,
-          packages,
-          p
-        );
-      }))
-      .then(() => {
-        if (queue.getPendingLength() === 0) {
-          p.resolve();
-        }
-      });
-  });
-  return p;
-}
-
-function showQuickStats(name, semVersion, packages) {
+function showQuickStats(name, versionLoose, packages) {
   const packagesAr = Object.keys(packages);
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
@@ -152,14 +43,14 @@ function parseName(nameVersion) {
     scope = true;
     nameVersionStr = nameVersionStr.slice(1);
   }
-  let [name, semVersion] = nameVersionStr.split(`@`);
-  if (!semVersion) {
-    semVersion = `latest`;
+  let [name, versionLoose] = nameVersionStr.split(`@`);
+  if (!versionLoose) {
+    versionLoose = `latest`;
   }
   if (scope) {
     name = `@${name}`;
   }
-  return { name, semVersion };
+  return { name, versionLoose };
 }
 
 function exec(command, args) {
@@ -168,41 +59,49 @@ function exec(command, args) {
   });
 }
 
+const choices = [`Install`, `Skip`, `Show impact`];
+
 function install(nameVersion) {
-  const queue = new Queue(20, Infinity);
-  const packages = {};
-  const { name, semVersion } = parseName(nameVersion);
-  getPackageDetails(name, semVersion).then((packageStats) => {
-    process.stdout.cursorTo(0);
-    process.stdout.clearLine(1);
-    process.stdout.write(`You are installing ${
-      packageStats.name
-    }@${
-      packageStats.version
-    } (last modified ${
-      moment(packageStats.modified).fromNow()
-    })\n`);
-    return addPackageToQueue(
-      queue,
-      { [name]: semVersion },
-      packages
-    );
-  }).then(() => {
-    showQuickStats(name, semVersion, packages);
-    return inquirer.prompt({
-      type: `list`,
-      name: `next`,
-      message: `Install this package?`,
-      choices: [`Install`, `Skip`]
+  const { name, versionLoose } = parseName(nameVersion);
+  getPackageDetails(name, versionLoose)
+    .then((packageStats) => {
+      process.stdout.cursorTo(0);
+      process.stdout.clearLine(1);
+      process.stdout.write(`You are installing ${
+        packageStats.name
+      }@${
+        packageStats.version
+      } (last modified ${
+        moment(packageStats.modified).fromNow()
+      })\n`);
+      return walkDependencies(
+        { [name]: versionLoose }
+      );
+    })
+    .then((packages) => {
+      showQuickStats(name, versionLoose, packages);
+      return inquirer.prompt({
+        type: `list`,
+        name: `next`,
+        message: `Install this package?`,
+        choices
+      });
+    })
+    .then(({ next }) => {
+      switch (choices.indexOf(next)) {
+        case 0:
+          return exec(`npm`, process.argv.slice(2));
+        case 2:
+          console.log(`show impact`);
+          break;
+        default:
+          process.exit(0);
+      }
+    })
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
     });
-  }).then(({ next }) => {
-    switch (next) {
-      case `Install`:
-        return exec(`npm`, process.argv.slice(2));
-      default:
-        process.exit(0);
-    }
-  });
 }
 
 program.version(packageJson.version);
