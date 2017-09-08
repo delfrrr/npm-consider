@@ -12,22 +12,28 @@ const getPackageDetails = require('./lib/getPackageDetails');
 const walkDependencies = require('./lib/walkDependencies');
 const getLocalPackage = require('./lib/getLocalPackage');
 const calculateImpactPackages = require('./lib/calculateImpactPackages');
+const Table = require('cli-table');
+
+function getLicenseStr(licenseObj) {
+  if (typeof licenseObj === 'string') {
+    return licenseObj;
+  } else if (Array.isArray(licenseObj)) {
+    return `(${licenseObj.map(getLicenseStr).join(` OR `)})`;
+  } else if (typeof licenseObj === 'object') {
+    return licenseObj.type || `Unknown`;
+  }
+  return `Unknown`;
+}
 
 function getPackagesStats(packages) {
   const packagesAr = Object.keys(packages);
   const count = packagesAr.length;
   const size = packagesAr.reduce((s, key) => {
-    if (!packages[key]) {
-      console.log(key, packages);
-    }
     s += Number(packages[key].size);
     return s;
   }, 0);
   const licenses = packagesAr.reduce((l, key) => {
-    let { license } = packages[key];
-    if (typeof license === `object`) {
-      license = license.type || `Unknown`;
-    }
+    const license = getLicenseStr(packages[key].license);
     l[license] = l[license] || 0;
     l[license] += 1;
     return l;
@@ -70,9 +76,6 @@ function exec(command, args) {
   });
 }
 
-const choices = [`Install`, `Skip`, `Show impact`];
-
-
 function showImpact(name, versionLoose, newPackages) {
   return getLocalPackage().then((localPackage) => {
     const dependencies = localPackage.dependencies || {};
@@ -90,6 +93,8 @@ function showImpact(name, versionLoose, newPackages) {
         );
         const currentPackagesStats = getPackagesStats(currentPackages);
         const impactPackagesStats = getPackagesStats(impactPackages);
+        process.stdout.clearLine();
+        process.stdout.cursorTo(0);
         console.log(`Packages impact ${impactPackagesStats.count} (+${
           (impactPackagesStats.count / currentPackagesStats.count * 100).toFixed(2)
         }%)`);
@@ -114,6 +119,43 @@ function showImpact(name, versionLoose, newPackages) {
   });
 }
 
+function showDetails(name, versionLoose, packages) {
+  const table = new Table({
+    head: [
+      `Package`,
+      `Size`,
+      `Updated`,
+      `License`,
+      `Dependencies`
+    ]
+  });
+  Object.keys(packages).forEach((key) => {
+    const { modified, license, size, dependencies } = packages[key];
+    const dependenciesAr = [];
+    Object.keys(dependencies).forEach((k) => {
+      dependenciesAr.push(`${k}@${dependencies[k]}`);
+    });
+    table.push([
+      key,
+      filesize(size),
+      moment(modified).fromNow(),
+      getLicenseStr(license),
+      dependenciesAr.join(',\n')
+    ]);
+  });
+  // process.stdout.cursorTo(0);
+  // process.stdout.clearLine(1);
+  console.log(table.toString());
+  process.exit(0);
+}
+
+const choices = [
+  `Install`,
+  `Skip`,
+  `Show Impact`,
+  `Show Details`
+];
+
 function promptNextAction(name, versionLoose, packages) {
   return inquirer.prompt({
     type: `list`,
@@ -124,15 +166,22 @@ function promptNextAction(name, versionLoose, packages) {
     .then(({ next }) => {
       switch (choices.indexOf(next)) {
         case 0:
-          return exec(`npm`, process.argv.slice(2));
+          exec(`npm`, process.argv.slice(2));
+          return Promise.reject();
         case 2:
           return showImpact(name, versionLoose, packages);
+        case 3:
+          return showDetails(name, versionLoose, packages);
         default:
           process.exit(0);
       }
     })
     .then(() => {
       return promptNextAction(name, versionLoose, packages);
+    }, (e) => {
+      if (e) {
+        throw e;
+      }
     });
 }
 

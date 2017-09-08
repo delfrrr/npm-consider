@@ -28,6 +28,7 @@
     "eslint-plugin-import": "^2.7.0"
   },
   "dependencies": {
+    "cli-table": "^0.3.1",
     "commander": "^2.11.0",
     "filesize": "^3.5.10",
     "inquirer": "^3.2.3",
