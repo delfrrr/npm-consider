@@ -151,9 +151,9 @@ function showDetails(name, versionLoose, packages) {
 
 const choices = [
   `Install`,
-  `Skip`,
-  `Show Impact`,
-  `Show Details`
+  `Impact`,
+  `Details`,
+  `Skip`
 ];
 
 function promptNextAction(name, versionLoose, packages) {
@@ -168,9 +168,9 @@ function promptNextAction(name, versionLoose, packages) {
         case 0:
           exec(`npm`, process.argv.slice(2));
           return Promise.reject();
-        case 2:
+        case 1:
           return showImpact(name, versionLoose, packages);
-        case 3:
+        case 2:
           return showDetails(name, versionLoose, packages);
         default:
           process.exit(0);
