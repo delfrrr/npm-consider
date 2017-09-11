@@ -28,6 +28,7 @@
     "eslint-plugin-import": "^2.7.0"
   },
   "dependencies": {
+    "chalk": "^2.1.0",
     "cli-table": "^0.3.1",
     "commander": "^2.11.0",
     "filesize": "^3.5.10",
@@ -35,6 +36,8 @@
     "moment": "^2.18.1",
     "node-fetch": "^1.7.2",
     "promise-queue": "^2.2.3",
-    "semver": "^5.4.1"
+    "semver": "^5.4.1",
+    "spdx-correct": "^2.0.4",
+    "spdx-satisfies": "^0.1.3"
   }
 }

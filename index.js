@@ -12,45 +12,22 @@ const getPackageDetails = require('./lib/getPackageDetails');
 const walkDependencies = require('./lib/walkDependencies');
 const getLocalPackage = require('./lib/getLocalPackage');
 const calculateImpactPackages = require('./lib/calculateImpactPackages');
+const getLicenseStr = require('./lib/getLicenseStr');
+const getPackagesStats = require('./lib/getPackagesStats');
 const Table = require('cli-table');
-
-function getLicenseStr(licenseObj) {
-  if (typeof licenseObj === 'string') {
-    return licenseObj;
-  } else if (Array.isArray(licenseObj)) {
-    return `(${licenseObj.map(getLicenseStr).join(` OR `)})`;
-  } else if (typeof licenseObj === 'object') {
-    return licenseObj.type || `Unknown`;
-  }
-  return `Unknown`;
-}
-
-function getPackagesStats(packages) {
-  const packagesAr = Object.keys(packages);
-  const count = packagesAr.length;
-  const size = packagesAr.reduce((s, key) => {
-    s += Number(packages[key].size);
-    return s;
-  }, 0);
-  const licenses = packagesAr.reduce((l, key) => {
-    const license = getLicenseStr(packages[key].license);
-    l[license] = l[license] || 0;
-    l[license] += 1;
-    return l;
-  }, {});
-  return { count, size, licenses };
-}
+const formatLicenseType = require('./lib/formatLicenseType');
 
 function showQuickStats(name, versionLoose, packages) {
-  const { count, size, licenses } = getPackagesStats(packages);
+  const { count, size, licenseTypes } = getPackagesStats(packages);
   process.stdout.clearLine();
   process.stdout.cursorTo(0);
   console.log(`Total download packages ${count}`);
   console.log(`Total download size ${filesize(size)}`);
-  console.log(`Licenses ${Object.keys(licenses).reduce((out, license) => {
-    out += ` ${license}:${licenses[license]}`;
-    return out;
-  }, ``)}`);
+  console.log(`Licenses ${Object.keys(licenseTypes)
+    .reduce((out, type) => {
+      out += ` ${formatLicenseType(type)} (${licenseTypes[type]})`;
+      return out;
+    }, ``)}`);
 }
 
 function parseName(nameVersion) {

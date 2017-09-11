@@ -10,7 +10,8 @@ module.exports = {
         "comma-dangle": 0,
         "arrow-body-style": 0,
         "consistent-return": 0,
-        "no-mixed-operators": 0
+        "no-mixed-operators": 0,
+        "array-callback-return": 0
     },
     "env": {
         "node": "true"
