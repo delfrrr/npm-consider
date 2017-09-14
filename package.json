@@ -29,7 +29,8 @@
   },
   "dependencies": {
     "chalk": "^2.1.0",
-    "cli-table": "^0.3.1",
+    "cli-table2": "^0.2.0",
+    "colors": "^1.1.2",
     "commander": "^2.11.0",
     "filesize": "^3.5.10",
     "inquirer": "^3.2.3",

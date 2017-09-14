@@ -10,9 +10,8 @@ const inquirer = require('inquirer');
 const spawn = require('child_process').spawn;
 const getPackageDetails = require('./lib/getPackageDetails');
 const walkDependencies = require('./lib/walkDependencies');
-const getLicenseStr = require('./lib/getLicenseStr');
 const getPackagesStats = require('./lib/getPackagesStats');
-const Table = require('cli-table');
+const Table = require('cli-table2');
 const formatLicenseType = require('./lib/formatLicenseType');
 const showImpact = require('./lib/showImpact');
 
@@ -58,12 +57,15 @@ function showDetails(name, versionLoose, packages) {
       `Package`,
       `Size`,
       `Updated`,
-      `License`,
+      { content: 'License', colSpan: 2 },
       `Dependencies`
-    ]
+    ],
+    style: { 'padding-left': 1, 'padding-right': 1 }
   });
   Object.keys(packages).forEach((key) => {
-    const { modified, license, size, dependencies } = packages[key];
+    const {
+      modified, license, size, dependencies, licenseType
+    } = packages[key];
     const dependenciesAr = [];
     Object.keys(dependencies).forEach((k) => {
       dependenciesAr.push(`${k}@${dependencies[k]}`);
@@ -72,7 +74,12 @@ function showDetails(name, versionLoose, packages) {
       key,
       filesize(size),
       moment(modified).fromNow(),
-      getLicenseStr(license),
+      `${
+        formatLicenseType(licenseType)
+          .split(' ')
+          .join('\n')
+      }`,
+      license,
       dependenciesAr.join(',\n')
     ]);
   });
