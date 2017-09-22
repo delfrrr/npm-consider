@@ -4,30 +4,20 @@
 
 const program = require('commander');
 const packageJson = require('./package.json');
-const filesize = require('filesize');
 const moment = require('moment');
 const inquirer = require('inquirer');
 const spawn = require('child_process').spawn;
 const getPackageDetails = require('./lib/getPackageDetails');
 const walkDependencies = require('./lib/walkDependencies');
-const getPackagesStats = require('./lib/getPackagesStats');
-const Table = require('cli-table2');
-const formatLicenseType = require('./lib/formatLicenseType');
 const showImpact = require('./lib/showImpact');
+const showDetails = require('./lib/showDetails');
+const showQuickStats = require('./lib/showQuickStats');
+const colors = require('colors/safe');
 
-function showQuickStats(name, versionLoose, packages) {
-  const { count, size, licenseTypes } = getPackagesStats(packages);
-  process.stdout.clearLine();
-  process.stdout.cursorTo(0);
-  console.log(`Total download packages ${count}`);
-  console.log(`Total download size ${filesize(size)}`);
-  console.log(`Licenses ${Object.keys(licenseTypes)
-    .reduce((out, type) => {
-      out += ` ${formatLicenseType(type)} (${licenseTypes[type]})`;
-      return out;
-    }, ``)}`);
-}
-
+/**
+ * @param  {string} nameVersion
+ * @return {object} name and version loose
+ */
 function parseName(nameVersion) {
   let nameVersionStr = String(nameVersion).trim();
   let scope = false;
@@ -45,48 +35,15 @@ function parseName(nameVersion) {
   return { name, versionLoose };
 }
 
+/**
+ * exec command
+ * @param  {string} command
+ * @param  {array} args   description]
+ */
 function exec(command, args) {
   spawn(command, args, {
     stdio: `inherit`
   });
-}
-
-function showDetails(name, versionLoose, packages) {
-  const table = new Table({
-    head: [
-      `Package`,
-      `Size`,
-      `Updated`,
-      { content: 'License', colSpan: 2 },
-      `Dependencies`
-    ],
-    style: { 'padding-left': 1, 'padding-right': 1 }
-  });
-  Object.keys(packages).forEach((key) => {
-    const {
-      modified, license, size, dependencies, licenseType
-    } = packages[key];
-    const dependenciesAr = [];
-    Object.keys(dependencies).forEach((k) => {
-      dependenciesAr.push(`${k}@${dependencies[k]}`);
-    });
-    table.push([
-      key,
-      filesize(size),
-      moment(modified).fromNow(),
-      `${
-        formatLicenseType(licenseType)
-          .split(' ')
-          .join('\n')
-      }`,
-      license,
-      dependenciesAr.join(',\n')
-    ]);
-  });
-  // process.stdout.cursorTo(0);
-  // process.stdout.clearLine(1);
-  console.log(table.toString());
-  process.exit(0);
 }
 
 const choices = [
@@ -96,6 +53,11 @@ const choices = [
   `Skip`
 ];
 
+/**
+ * @param  {string} name
+ * @param  {string} versionLoose
+ * @param  {Object} packages
+ */
 function promptNextAction(name, versionLoose, packages) {
   return inquirer.prompt({
     type: `list`,
@@ -125,6 +87,10 @@ function promptNextAction(name, versionLoose, packages) {
     });
 }
 
+/**
+ * install action
+ * @param  {string} nameVersion package considering to install
+ */
 function install(nameVersion) {
   const { name, versionLoose } = parseName(nameVersion);
   getPackageDetails(name, versionLoose)
@@ -132,10 +98,10 @@ function install(nameVersion) {
       process.stdout.cursorTo(0);
       process.stdout.clearLine(1);
       process.stdout.write(`${
-        packageStats.name
-      }@${
-        packageStats.version
-      } (last modified ${
+        colors.bold(
+          `${packageStats.name}@${packageStats.version}`
+        )
+      } (updated ${
         moment(packageStats.modified).fromNow()
       })\n`);
       return walkDependencies(
@@ -160,7 +126,7 @@ program.description(packageJson.description);
 program.command(`install <name>`)
   .alias(`i`)
   .action(install)
-  .option(`-S, --save`, `Save`)
-  .option(`-D, --save-dev`, `Save`);
+  .option(`-S, --save`, `Save to dependencies`)
+  .option(`-D, --save-dev`, `Save to devDependencies`);
 
 program.parse(process.argv);
