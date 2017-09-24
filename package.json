@@ -1,7 +1,7 @@
 {
   "name": "npm-consider",
   "version": "1.0.0",
-  "description": "Check module stats and impact before install",
+  "description": "Check npm package dependencies, stats and impact on your package before installing it",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,6 +18,9 @@
   ],
   "author": "",
   "license": "MIT",
+  "bin": {
+    "npm-consider": "./bin/npm-consider.js"
+  },
   "bugs": {
     "url": "https://github.com/delfrrr/npm-consider/issues"
   },
@@ -28,7 +31,6 @@
     "eslint-plugin-import": "^2.7.0"
   },
   "dependencies": {
-    "chalk": "^2.1.0",
     "cli-table2": "^0.2.0",
     "colors": "^1.1.2",
     "commander": "^2.11.0",
