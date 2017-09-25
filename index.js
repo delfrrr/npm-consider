@@ -122,8 +122,13 @@ function install(nameVersion) {
 
 program.version(packageJson.version);
 program.description(packageJson.description);
+program.usage('npm-consider install <pkg>');
 
-program.command(`install <name>`)
+if (!process.argv.slice(2).length) {
+  program.outputHelp();
+}
+
+program.command(`install <pkg>`)
   .alias(`i`)
   .action(install)
   .option(`-S, --save`, `Save to dependencies`)
