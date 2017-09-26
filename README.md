@@ -1,6 +1,7 @@
 # npm-consider
 
 Check npm package dependencies size, licenses and impact on your package before installing it 🤔
+
 ![npm-consider](https://i.imgur.com/eAQPbHL.gif)
 If you like it, please, ⭐️ this repo!
 ## Features
