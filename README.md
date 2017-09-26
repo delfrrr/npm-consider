@@ -40,6 +40,7 @@ The command recursively requests packages info from npm and builds dependencies 
 **Note:** that even permissive licenses have some restrictions. Check the following slide and article to learn about license compatibility:
 
 ![](https://www.dwheeler.com/essays/floss-license-slide-image.png)
+
 [The Free-Libre / Open Source Software (FLOSS) License Slide](https://www.dwheeler.com/essays/floss-license-slide.html)
 
 ### Menu options
