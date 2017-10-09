@@ -32,10 +32,11 @@ The command recursively requests packages info from npm and builds dependencies 
 
 `npm-consider` calculates license type for every dependency. The type defines license policy for [linking as a librtary](https://en.wikipedia.org/wiki/Library_(computing)#Linking). Data collected from [Comparison of free and open-source software licenses](https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licenses) on Wikipedia.
 
- * `public domain` and `permissive` license allows you to use dependency with most popular open source licenses and for proprietary software
- * `restricted` dependency license can be combined only with some specific licenses
- * `copyleft` or *protective* dependency license requires dependent module to have a free license, which prevents it from being proprietary
- * `uncategorized` means that license was not found in a package info or was not categorized in terms of linking.
+ * `Public Domain` and `Permissive` license allows you to do anything except sue the author
+ * `Weakly Protective` license have restriction to how can it be linked and combined with other licenses
+ * `Protective` or *Copyleft* dependency license requires dependent module to have a free license, which prevents it from being proprietary
+ * `Network Protective` same as *Protective* but also triggers with network interaction
+ * `Uncategorized` means that license was not found in a package info or was not categorised in terms of linking; feel free to contribute to license categorisation;
 
 **Note:** that even permissive licenses have some restrictions. Check the following slide and article to learn about license compatibility:
 
