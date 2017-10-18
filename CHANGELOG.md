@@ -1,4 +1,4 @@
-## 1.1.0 (2017-10-09):
+## v1.1.0 (2017-10-09):
 
 Update license categories
 
