@@ -17,7 +17,7 @@
     "package"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "(MIT AND Artistic-2.0)",
   "bin": {
     "npm-consider": "./bin/npm-consider.js"
   },
