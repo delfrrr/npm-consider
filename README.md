@@ -10,7 +10,8 @@ If you like it, please, ⭐️ this repo!
 * show dependencies license policy for linking
 * calculates impact on current package
 * show full dependency graph
-* analyzes packages without downloading it
+* analyses packages without downloading it
+* supports yarn
 
 
 ## Installing
@@ -27,6 +28,10 @@ npm install -g npm-consider
 npm-consider install --save express
 ```
 The command recursively requests packages info from npm and builds dependencies graph. Size of the package determined via `HEAD` request to `tarball` download URL.
+
+### Usage with yarn
+
+If project contains `yarn.lock` file, then `npm-consider` will do `yarn add` with corresponding options.
 
 ### Licence type
 

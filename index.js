@@ -12,6 +12,7 @@ const walkDependencies = require('./lib/walkDependencies');
 const showImpact = require('./lib/showImpact');
 const showDetails = require('./lib/showDetails');
 const showQuickStats = require('./lib/showQuickStats');
+const testYarn = require('./lib/testYarn');
 const colors = require('colors/safe');
 
 /**
@@ -46,12 +47,40 @@ function exec(command, args) {
   });
 }
 
-const choices = [
-  `Install`,
-  `Impact`,
-  `Details`,
-  `Skip`
-];
+/**
+ * calculate install command and arguments
+ * @param  {Boolean} isYarn
+ * @return {object}
+ */
+function getInstallCommand(isYarn) {
+  const command = isYarn ? `yarn` : `npm`;
+  const args = [];
+  if (command === 'npm') {
+    args.push(...process.argv.slice(2));
+  } else {
+    // yarn
+    const [nameVersion, options] = program.args;
+    args.push('add', nameVersion);
+    if (options.saveDev) {
+      args.push('--dev');
+    }
+  }
+  return { command, args };
+}
+
+/**
+ * @param  {string} command npm or yarn
+ * @param  {string[]} args
+ * @return {string[]} prompt choices
+ */
+function getChoises(command, args) {
+  return [
+    `Install (${colors.bold(`${command} ${args.join(' ')}`)})`,
+    `Impact`,
+    `Details`,
+    `Skip`
+  ];
+}
 
 /**
  * @param  {string} name
@@ -59,16 +88,18 @@ const choices = [
  * @param  {Object} packages
  */
 function promptNextAction(name, versionLoose, packages) {
-  return inquirer.prompt({
-    type: `list`,
-    name: `next`,
-    message: `What is next?`,
-    choices
-  })
-    .then(({ next }) => {
+  return testYarn().then((isYarn) => {
+    const { command, args } = getInstallCommand(isYarn);
+    const choices = getChoises(command, args);
+    return inquirer.prompt({
+      type: `list`,
+      name: `next`,
+      message: `What is next?`,
+      choices
+    }).then(({ next }) => {
       switch (choices.indexOf(next)) {
         case 0:
-          exec(`npm`, process.argv.slice(2));
+          exec(command, args);
           return Promise.reject();
         case 1:
           return showImpact(name, versionLoose, packages);
@@ -77,21 +108,22 @@ function promptNextAction(name, versionLoose, packages) {
         default:
           process.exit(0);
       }
-    })
-    .then(() => {
-      return promptNextAction(name, versionLoose, packages);
-    }, (e) => {
-      if (e) {
-        throw e;
-      }
     });
+  }).then(() => {
+    return promptNextAction(name, versionLoose, packages);
+  }, (e) => {
+    if (e) {
+      throw e;
+    }
+  });
 }
 
 /**
  * install action
  * @param  {string} nameVersion package considering to install
  */
-function install(nameVersion) {
+function install(nameVersion, options) {
+  // console.log(options);
   const { name, versionLoose } = parseName(nameVersion);
   getPackageDetails(name, versionLoose)
     .then((packageStats) => {
