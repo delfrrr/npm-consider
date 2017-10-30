@@ -6,14 +6,17 @@ const program = require('commander');
 const packageJson = require('./package.json');
 const moment = require('moment');
 const inquirer = require('inquirer');
-const spawn = require('child_process').spawn;
 const getPackageDetails = require('./lib/getPackageDetails');
 const walkDependencies = require('./lib/walkDependencies');
 const showImpact = require('./lib/showImpact');
 const showDetails = require('./lib/showDetails');
 const showQuickStats = require('./lib/showQuickStats');
-const testYarn = require('./lib/testYarn');
 const colors = require('colors/safe');
+const install = require('./lib/install');
+const exec = require('./lib/exec');
+const getInstallCommand = require(
+  './lib/getInstallCommand'
+);
 
 /**
  * @param  {string} nameVersion
@@ -37,38 +40,6 @@ function parseName(nameVersion) {
 }
 
 /**
- * exec command
- * @param  {string} command
- * @param  {array} args   description]
- */
-function exec(command, args) {
-  spawn(command, args, {
-    stdio: `inherit`
-  });
-}
-
-/**
- * calculate install command and arguments
- * @param  {Boolean} isYarn
- * @return {object}
- */
-function getInstallCommand(isYarn) {
-  const command = isYarn ? `yarn` : `npm`;
-  const args = [];
-  if (command === 'npm') {
-    args.push(...process.argv.slice(2));
-  } else {
-    // yarn
-    const [nameVersion, options] = program.args;
-    args.push('add', nameVersion);
-    if (options.saveDev) {
-      args.push('--dev');
-    }
-  }
-  return { command, args };
-}
-
-/**
  * @param  {string} command npm or yarn
  * @param  {string[]} args
  * @return {string[]} prompt choices
@@ -88,8 +59,7 @@ function getChoises(command, args) {
  * @param  {Object} packages
  */
 function promptNextAction(name, versionLoose, packages) {
-  return testYarn().then((isYarn) => {
-    const { command, args } = getInstallCommand(isYarn);
+  return getInstallCommand().then(({ command, args }) => {
     const choices = getChoises(command, args);
     return inquirer.prompt({
       type: `list`,
@@ -122,8 +92,7 @@ function promptNextAction(name, versionLoose, packages) {
  * install action
  * @param  {string} nameVersion package considering to install
  */
-function install(nameVersion, options) {
-  // console.log(options);
+function installPackage(nameVersion) {
   const { name, versionLoose } = parseName(nameVersion);
   getPackageDetails(name, versionLoose)
     .then((packageStats) => {
@@ -141,7 +110,7 @@ function install(nameVersion, options) {
       );
     })
     .then((packages) => {
-      showQuickStats(name, versionLoose, packages);
+      showQuickStats(packages);
       return promptNextAction(
         name, versionLoose, packages
       );
@@ -152,6 +121,7 @@ function install(nameVersion, options) {
     });
 }
 
+
 program.version(packageJson.version);
 program.description(packageJson.description);
 program.usage('npm-consider install <pkg>');
@@ -160,9 +130,15 @@ if (!process.argv.slice(2).length) {
   program.outputHelp();
 }
 
-program.command(`install <pkg>`)
+program.command(`install [pkg]`)
   .alias(`i`)
-  .action(install)
+  .action((pkg, options) => {
+    if (pkg) {
+      installPackage(pkg);
+    } else {
+      install(options);
+    }
+  })
   .option(`-S, --save`, `Save to dependencies`)
   .option(`-D, --save-dev`, `Save to devDependencies`);
 
