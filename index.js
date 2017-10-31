@@ -74,7 +74,7 @@ function promptNextAction(name, versionLoose, packages) {
         case 1:
           return showImpact(name, versionLoose, packages);
         case 2:
-          return showDetails(name, versionLoose, packages);
+          return showDetails(packages);
         default:
           process.exit(0);
       }
