@@ -140,6 +140,7 @@ program.command(`install [pkg]`)
     }
   })
   .option(`-S, --save`, `Save to dependencies`)
-  .option(`-D, --save-dev`, `Save to devDependencies`);
+  .option(`-D, --save-dev`, `Save to devDependencies`)
+  .option(`--production`, `Will not install modules listed in devDependencies`);
 
 program.parse(process.argv);
