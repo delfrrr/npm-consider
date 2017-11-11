@@ -23,6 +23,7 @@ const getInstallCommand = require(
  * @return {object} name and version loose
  */
 function parseName(nameVersion) {
+  // TODO: check urls
   let nameVersionStr = String(nameVersion).trim();
   let scope = false;
   if (nameVersionStr[0] === `@`) {
