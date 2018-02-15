@@ -45,7 +45,7 @@ function parseName(nameVersion) {
  * @param  {string[]} args
  * @return {string[]} prompt choices
  */
-function getChoises(command, args) {
+function getChoices(command, args) {
   return [
     `Install (${colors.bold(`${command} ${args.join(' ')}`)})`,
     `Impact`,
@@ -61,7 +61,7 @@ function getChoises(command, args) {
  */
 function promptNextAction(name, versionLoose, packages) {
   return getInstallCommand().then(({ command, args }) => {
-    const choices = getChoises(command, args);
+    const choices = getChoices(command, args);
     return inquirer.prompt({
       type: `list`,
       name: `next`,
