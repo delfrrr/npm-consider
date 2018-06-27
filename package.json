@@ -41,6 +41,7 @@
     "promise-queue": "^2.2.3",
     "semver": "^5.4.1",
     "spdx-correct": "^2.0.4",
-    "spdx-satisfies": "^0.1.3"
+    "spdx-satisfies": "^0.1.3",
+    "rc": "^1.2.8"
   }
 }
