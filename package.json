@@ -1,6 +1,6 @@
 {
   "name": "npm-consider",
-  "version": "1.5.2",
+  "version": "1.6.0",
   "description": "Check npm package dependencies, stats and impact on your package before installing it",
   "main": "index.js",
   "scripts": {
