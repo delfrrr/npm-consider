@@ -4,7 +4,7 @@
   "description": "Check npm package dependencies, stats and impact on your package before installing it",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "eslint ./lib/ ./bin/"
   },
   "repository": {
     "type": "git",
