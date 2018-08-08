@@ -3,7 +3,12 @@
 Check npm package dependencies size, licenses and impact on your package before installing it 🤔
 
 ![npm-consider](https://i.imgur.com/eAQPbHL.gif)
+
 If you like it, please, ⭐️ this repo!
+
+[![Build Status](https://travis-ci.org/delfrrr/npm-consider.svg?branch=master)](https://travis-ci.org/delfrrr/npm-consider)
+
+
 ## Features
 
 * calculate dependencies size recursively
@@ -43,7 +48,7 @@ npm-consider install
 
 **Using for automation and continuous integration**
 
-You can specify maximum values of size and number as well as allowed license types in `config` of your `package.json`. 
+You can specify maximum values of size and number as well as allowed license types in `config` of your `package.json`.
 
 ```
 "config": {
@@ -74,7 +79,7 @@ Supported properties:
  * `maxPackagesNumber` max number of `npm` dependencies incuding [transitive dependencies](https://en.wikipedia.org/wiki/Transitive_dependency)
  * `maxSizeBites` max size of downloaded packages in bites
  * `allowedLicenseTypes` what types of dependency licenses are accpetable for the package
- 
+
 Supported types are `publicDomain`, `permissive`, `weaklyProtective`, `protective`, `networkProtective`, `uncategorized`.
 If you are not sure which license types are appropriate [check this artice](https://medium.com/@vovabilonenko/licenses-of-npm-dependencies-bacaa00c8c65).
 
