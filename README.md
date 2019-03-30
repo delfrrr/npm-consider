@@ -14,7 +14,7 @@ If you like it, please, ⭐️ this repo!
 * calculate dependencies size recursively
 * show dependencies license policy for linking
 * calculates impact on current package
-* show full dependency graph
+* show a full dependency graph
 * analyses packages without downloading it
 * supports yarn
 * analyzes local package
@@ -26,7 +26,7 @@ If you like it, please, ⭐️ this repo!
 ```
 npm install -g npm-consider
 ```
-**Note:** this tool is more useful when you colleagues also use it 😉
+**Note:** this tool is more useful when your colleagues also use it 😉
 ## Usage
 
 **Add new dependency**
@@ -40,7 +40,7 @@ The command recursively requests packages info from npm and builds dependencies 
 
 **Analyze local package**
 
-When called without arguments in package directory it builds dependency graph and calculate metrics for local package
+When called without arguments in package directory it builds a dependency graph and calculates metrics for local package
 
 ```
 npm-consider install
@@ -85,15 +85,15 @@ If you are not sure which license types are appropriate [check this artice](http
 
 ### Usage with yarn
 
-If project contains `yarn.lock` file, then `npm-consider` will do `yarn add` with corresponding options.
+If the project contains `yarn.lock` file, then `npm-consider` will do `yarn add` with corresponding options.
 
 ### Licence type
 
 `npm-consider` calculates license type for every dependency. The type defines license policy for [linking as a librtary](https://en.wikipedia.org/wiki/Library_(computing)#Linking). Data collected from [Comparison of free and open-source software licenses](https://en.wikipedia.org/wiki/Comparison_of_free_and_open-source_software_licenses) on Wikipedia.
 
  * `Public Domain` and `Permissive` license allows you to do anything except sue the author
- * `Weakly Protective` license have restriction to how can it be linked and combined with other licenses
- * `Protective` or *Copyleft* dependency license requires dependent module to have a free license, which prevents it from being proprietary
+ * `Weakly Protective` license have a restriction to how can it be linked and combined with other licenses
+ * `Protective` or *Copyleft* dependency license requires a dependent module to have a free license, which prevents it from being proprietary
  * `Network Protective` same as *Protective* but also triggers with network interaction
  * `Uncategorized` means that license was not found in a package info or was not categorised in terms of linking; feel free to contribute to license categorisation;
 
