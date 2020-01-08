@@ -3,15 +3,15 @@
 */
 
 const program = require('commander');
-const packageJson = require('./package.json');
 const moment = require('moment');
 const inquirer = require('inquirer');
+const colors = require('colors/safe');
+const packageJson = require('./package.json');
 const getPackageDetails = require('./lib/getPackageDetails');
 const walkDependencies = require('./lib/walkDependencies');
 const showImpact = require('./lib/showImpact');
 const showDetails = require('./lib/showDetails');
 const showQuickStats = require('./lib/showQuickStats');
-const colors = require('colors/safe');
 const install = require('./lib/install');
 const exec = require('./lib/exec');
 const getInstallCommand = require(
